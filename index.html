@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="Drag Papers 🫠">
+  <meta property="og:description" content="Interactive paper dragging experience">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+  
+  <!-- Twitter Card Tags -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Drag Papers 🫠">
+  <meta name="twitter:description" content="Interactive paper dragging experience">
+  <meta name="twitter:image" content="">
+  
+  <!-- Additional Meta Tags -->
+  <meta name="robots" content="noimage">
+  <meta name="googlebot" content="noimage">
+  <meta name="pinterest" content="nopin">
+  <link rel="image_src" href="">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Drag Papers 🫠</title>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Short+Stack&amp;family=Homemade+Apple&amp;display=swap'>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Zeyada&display=swap');
+
+    body {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-size: 1000px;
+      background-image: url("https://www.psdgraphics.com/wp-content/uploads/2022/01/white-math-paper-texture.jpg");
+      background-position: center center;
+      margin: 0;
+      overflow: hidden;
+    }
+    
+    .paper {
+      background-image: url("https://i0.wp.com/textures.world/wp-content/uploads/2018/10/2-Millimeter-Paper-Background-copy.jpg?ssl=1");
+      background-size: 500px;
+      background-position: center center;
+      padding: 20px;
+      box-shadow: 1px 15px 20px 0px rgba(0,0,0,0.5);
+      position: absolute;
+      cursor: grab;
+      transform-origin: center center;
+      opacity: 0;
+      scale: 0.8;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      transition: opacity 0.5s ease-out, scale 0.5s ease-out;
+      pointer-events: none;
+    }
+
+    .paper.show {
+      opacity: 1;
+      scale: 1;
+      pointer-events: auto;
+    }
+    
+    .paper.image {
+      background-color: white;
+      padding: 15px;
+      width: fit-content;
+      max-width: min(500px, 85vw);
+    }
+    
+    .paper.image img {
+      width: 100%;
+      height: auto;
+      max-height: 60vh;
+      object-fit: contain;
+      border-radius: 8px;
+      pointer-events: none;
+      display: block;
+      -webkit-user-drag: none;
+      user-drag: none;
+      -webkit-touch-callout: none;
+    }
+    
+    .paper p {
+      font-family: 'Zeyada', cursive;
+      color: rgb(0,0,100);
+      opacity: 0.75;
+      margin: 10px 0;
+      text-align: center;
+      pointer-events: none;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      font-weight: bold;
+    }
+    
+    .paper.image p {
+      font-size: clamp(18px, 4vw, 30px);
+    }
+    
+    .paper:not(.image) p {
+      font-size: clamp(24px, 5vw, 50px);
+      padding: 10px 30px;
+    }
+    
+    .paper.red {
+      background-color: #ff9999;
+    }
+    
+    .paper.grabbing {
+      cursor: grabbing;
+    }
+    
+    #loadingScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #1a1a1a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      z-index: 9999;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      opacity: 1;
+      transition: opacity 0.5s ease-in-out;
+    }
+    
+    .loaded #loadingScreen {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    .spinner {
+      border: 8px solid rgba(255, 255, 255, 0.2);
+      border-top: 8px solid #3498db;
+      border-radius: 50%;
+      width: 80px;
+      height: 80px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .spinner + p {
+      margin-top: 25px;
+      font-size: 16px;
+      color: #f0f0f0;
+    }
+
+    @media (max-width: 768px) {
+      .paper {
+        transform: scale(0.8);
+      }
+      
+      .paper.image {
+        max-width: 85vw;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .paper {
+        transform: scale(0.7);
+      }
+    }
+
+    .last {
+      position: absolute;
+      background-size: 500px;
+      background-position: center center;
+      padding: 20px;
+      transform: rotateZ(-5deg);
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+    }
+
+    .last p {
+      font-family: 'Zeyada', cursive;
+      font-size: clamp(24px, 5vw, 50px);
+      color: rgb(0,0,100);
+      opacity: 0.75;
+      margin: 10px 0;
+      text-align: center;
+      pointer-events: none;
+      padding: 10px 30px;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading screen -->
+  <div id="loadingScreen">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+
+  <div class="last">
+    <p>created by saswat!<br>hope you like this!<br>it took me 8 hours to code this!</p>
+  </div>
+  
+  <div class="paper image">
+    <p>she looks so cool</p>
+    <p>wow!!!!!!!!!! 😦</p>
+    <img src="https://scontent.fbdp2-1.fna.fbcdn.net/v/t1.15752-9/462585031_592817723284137_6200665061112495427_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=9f807c&_nc_ohc=84mhY9b7eYEQ7kNvgFU5NSm&_nc_zt=23&_nc_ht=scontent.fbdp2-1.fna&oh=03_Q7cD1QEKi2FbLewJhPBQjY3_5whMjpIGrWR4L80_cLLPmw9FXA&oe=677B89FA" alt="gem image 1" />
+  </div>
+
+  <div class="paper image">
+    <p></p>
+    <img src="https://scontent.xx.fbcdn.net/v/t1.15752-9/462563556_869838208560830_2590975769949739036_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=0024fc&_nc_ohc=r4P6PVhtm5wQ7kNvgHY8zMZ&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent.xx&oh=03_Q7cD1QFah-R-S6K-iFb_EovsSgidKOBVQcGlG0pLm7mXmULppQ&oe=677B9447" alt="gem image 2" />
+  </div>
+
+  <div class="paper image">
+    <p>just look at this 🤩</p>
+    <p>just dyammm!</p>
+    <img src="https://scontent.fbdp2-1.fna.fbcdn.net/v/t1.15752-9/462570326_1144205150655089_3924343175476551192_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=9f807c&_nc_ohc=qvm4XoPvR24Q7kNvgERZhxC&_nc_zt=23&_nc_ht=scontent.fbdp2-1.fna&oh=03_Q7cD1QEUWWIN8PNj8VzuluXB6aHmCxHV1ipLb6hvAF0Ew4w3VQ&oe=677B906F" alt="gem image 3" />
+  </div>
+
+  <div class="paper red">
+    <p class="p1">her drawings are</p>
+    <p class="p2">AMAZING!!! 👌</p>
+  </div>
+
+<div class="paper">
+    <p class="p1">This is for an amazing artist!</p>
+    <p class="p1" style="color: red !important;">She's so talented!!! 😊</p>
+</div>
+
+
+  <div class="paper">
+    <p class="p1">Drag the papers to move!</p>
+  </div>
+
+<script>
+let highestZ = 1;
+let animationComplete = false;  // Global flag for animation state
+
+class PaperDragger {
+  constructor(paper) {
+    this.paper = paper;
+    this.isDragging = false;
+    this.startX = 0;
+    this.startY = 0;
+    this.initialX = 0;
+    this.initialY = 0;
+    this.rotation = Math.random() * 30 - 15;
+    this.currentX = 0;
+    this.currentY = 0;
+
+    this.init();
+  }
+
+  init() {
+    this.paper.style.transform = `translateX(0px) translateY(0px) rotateZ(${this.rotation}deg)`;
+    this.paper.style.position = 'absolute';
+
+    // Mouse events
+    this.paper.addEventListener('mousedown', this.onMouseDown.bind(this));
+    document.addEventListener('mousemove', this.onMouseMove.bind(this));
+    document.addEventListener('mouseup', this.onEnd.bind(this));
+
+    // Touch events
+    this.paper.addEventListener('touchstart', this.onTouchStart.bind(this), { passive: false });
+    document.addEventListener('touchmove', this.onTouchMove.bind(this), { passive: false });
+    document.addEventListener('touchend', this.onEnd.bind(this));
+  }
+
+  onMouseDown(e) {
+    if (!animationComplete || e.button !== 0) return;  // Check animation state
+    e.preventDefault();
+    this.startDrag(e.clientX, e.clientY);
+  }
+
+  onTouchStart(e) {
+    if (!animationComplete || e.touches.length > 1) return;  // Check animation state
+    e.preventDefault();
+    const touch = e.touches[0];
+    this.startDrag(touch.clientX, touch.clientY);
+  }
+
+  onMouseMove(e) {
+    if (!animationComplete) return;  // Check animation state
+    if (!this.isDragging) {
+      if (e.buttons === 1 && e.target.closest('.paper') === this.paper) {
+        this.startDrag(e.clientX, e.clientY);
+      }
+      return;
+    }
+    this.drag(e.clientX, e.clientY);
+  }
+
+  onTouchMove(e) {
+    if (!animationComplete || !this.isDragging) return;  // Check animation state
+    e.preventDefault();
+    const touch = e.touches[0];
+    this.drag(touch.clientX, touch.clientY);
+  }
+
+  onEnd() {
+    if (!animationComplete) return;  // Check animation state
+    if (this.isDragging) {
+      this.isDragging = false;
+      this.paper.style.cursor = 'grab';
+      this.initialX = this.currentX;
+      this.initialY = this.currentY;
+    }
+  }
+
+  startDrag(clientX, clientY) {
+    if (!animationComplete) return;  // Check animation state
+    this.isDragging = true;
+    this.paper.style.cursor = 'grabbing';
+    this.startX = clientX - this.initialX;
+    this.startY = clientY - this.initialY;
+    this.paper.style.zIndex = ++highestZ;
+  }
+
+  drag(clientX, clientY) {
+    if (!animationComplete) return;  // Check animation state
+    this.currentX = clientX - this.startX;
+    this.currentY = clientY - this.startY;
+    this.paper.style.transform = `translateX(${this.currentX}px) translateY(${this.currentY}px) rotateZ(${this.rotation}deg)`;
+  }
+}
+
+// Initialize papers with staggered animation
+document.addEventListener('DOMContentLoaded', () => {
+  const papers = Array.from(document.querySelectorAll('.paper'));
+  
+  // Disable all pointer events initially
+  papers.forEach(paper => {
+    paper.style.pointerEvents = 'none';
+  });
+  
+  // Initialize dragging
+  papers.forEach(paper => new PaperDragger(paper));
+
+  // Prevent scrolling
+  document.body.style.overflow = 'hidden';
+  document.documentElement.style.overflow = 'hidden';
+
+  // Staggered animation for papers
+  window.addEventListener("load", function () {
+    document.body.classList.add("loaded");
+    
+    // Calculate total animation time
+    const animationDelay = 100; // Delay between each paper
+    const totalAnimationTime = (papers.length * animationDelay) + 500; // Adding 500ms buffer
+    
+    // Add show class to papers with delay
+    papers.forEach((paper, index) => {
+      setTimeout(() => {
+        paper.classList.add('show');
+      }, animationDelay * (index + 1));
+    });
+    
+    // Enable interactions after all animations complete
+    setTimeout(() => {
+      animationComplete = true;
+      papers.forEach(paper => {
+        paper.style.pointerEvents = 'auto';
+      });
+    }, totalAnimationTime);
+  });
+});
+
+// Prevent context menu
+document.addEventListener('contextmenu', function(e) {
+  if (!animationComplete) {
+    e.preventDefault();
+    return;
+  }
+  e.preventDefault();
+});
+
+// Disable text selection globally
+document.addEventListener('selectstart', function(e) {
+  e.preventDefault();
+});
+
+// Disable image dragging
+document.querySelectorAll('img').forEach(function(img) {
+  img.addEventListener('dragstart', function(event) {
+    event.preventDefault();
+  });
+});
+
+// Disable key shortcuts
+document.addEventListener('keydown', function(event) {
+  if (event.ctrlKey && (event.key === 'u' || event.key === 'U' || event.key === 'i' || event.key === 'I' || event.key === 's' || event.key === 'S')) {
+    event.preventDefault();
+  }
+  if (event.key === 'F12') {
+    event.preventDefault();
+  }
+});
+</script>
+
+</body>
+</html>
